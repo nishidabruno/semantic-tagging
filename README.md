@@ -17,11 +17,11 @@ Into this:
 
 ## How it works
 
-The service provides a simple API that triggers a powerful, three-step pipeline:
+The service provides a simple API with three-step pipeline:
 
 1.  **Generation:** First, it analyzes the user's prompt to generate a broad list of "candidate" tags, sorting them into categories like the main subject, the background, and the overall style.
-2.  **Validation:** Next, it takes each candidate tag and searches a vast knowledge base of expert-approved tags to find the closest and most effective match. This is where "pink hair" becomes the more standard `pink_hair`.
-3.  **Finalization:** Finally, it compiles a clean, de-duplicated list of the best tags, correctly prioritized, and returns it to the user.
+2.  **Validation:** Next, it takes each candidate tag and searches on the vector database to find the closest semantic match. This is where "pink hair" becomes the more standard `pink_hair`.
+3.  **Finalization:** Finally, de-duplicated list of the best tags, correctly prioritized, and returns it to the user.
 
 ## Getting Started
 
