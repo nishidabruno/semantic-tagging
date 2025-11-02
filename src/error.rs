@@ -5,6 +5,7 @@ use axum::{
 use ollama_rs::error::OllamaError;
 use qdrant_client::QdrantError;
 use reqwest::StatusCode;
+use serde_json::Error as SerdeError;
 use serde_json::json;
 use thiserror::Error;
 
@@ -12,6 +13,9 @@ use thiserror::Error;
 pub enum LlmError {
     #[error("Failed to generate response from LLM")]
     Generation(#[from] OllamaError),
+
+    #[error("Failed to parse LLM response as JSON: {0}")]
+    JsonParse(#[from] SerdeError),
 }
 
 #[derive(Debug, Error)]
@@ -46,7 +50,10 @@ pub enum AppError {
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {
-            AppError::Llm(_) => (StatusCode::INTERNAL_SERVER_ERROR, "LLM operation failed"),
+            AppError::Llm(e) => {
+                eprintln!("LLM Error: {:?}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, "LLM operation failed")
+            }
             AppError::Embedding(e) => {
                 eprintln!("Embedding Error: {:?}", e);
                 (

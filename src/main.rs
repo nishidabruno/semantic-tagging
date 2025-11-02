@@ -61,6 +61,7 @@ async fn main() -> Result<(), AppError> {
         .route("/get-tags", post(prompt_to_tags))
         .route("/generate-candidate-tags", post(generate_candidate_tags))
         .route("/generate-tags", post(generate_tags))
+        .route("/structured-tags", post(test_generate_structured_tags))
         .with_state(Arc::new(app_state));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3333").await?;
@@ -106,11 +107,22 @@ async fn generate_tags(
     State(state): State<Arc<AppState>>,
     Json(input): Json<PromptInput>,
 ) -> Result<impl IntoResponse, AppError> {
-    let result = state.llm.generate_candidate_tags(&input.prompt).await?;
-    let result = state
+    let structured_tags = state.llm.generate_structured_tags(&input.prompt).await?;
+    let flat_tag_vec = structured_tags.to_flat_vec();
+
+    let tags = state
         .embedding
-        .validate_tags_concurrently(result, &state.llm)
+        .validate_tags_concurrently(flat_tag_vec, &state.llm)
         .await?;
 
-    Ok(Json(result))
+    Ok(Json(tags))
+}
+
+async fn test_generate_structured_tags(
+    State(state): State<Arc<AppState>>,
+    Json(input): Json<PromptInput>,
+) -> Result<impl IntoResponse, AppError> {
+    let structured_tags = state.llm.generate_structured_tags(&input.prompt).await?;
+
+    Ok(Json(structured_tags))
 }
