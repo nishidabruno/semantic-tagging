@@ -7,7 +7,7 @@ For example, it turns this:
 
 Into this:
 > `1girl, red_hair, warrior, blue_eyes, portrait, enchanted_forest, dark, sunset, cinematic_lighting, highly_detailed, masterpiece`
-<img width="1744" height="972" alt="example" src="https://github.com/user-attachments/assets/83078d81-dab6-4f08-9bb1-53a3e3336696" />
+<img width="1744" height="972" alt="example-tag" src="https://github.com/user-attachments/assets/ad49e92b-2011-43ed-a7ab-18f23222aa8b" />
 
 ## Core Features
 
