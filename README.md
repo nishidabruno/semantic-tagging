@@ -15,7 +15,7 @@ Into this:
 -   **Structured & Prioritized Tagging:** Automatically organizes tags into logical categories (**Subject**, **Environment**, **Quality**) and orders them from most to least important.
 -   **High-Performance API:** Built to be fast and reliable.
 
-## How It Works
+## How it works
 
 The service provides a simple API that triggers a powerful, three-step pipeline:
 
@@ -34,7 +34,7 @@ You will need **Ollama** and **Qdrant** running. The easiest way to get started 
     ollama pull gemma3:4b
     ollama pull embeddinggemma
     ```
-2.  **Run Qdrant (Knowledge Base):**
+2.  **Run Qdrant (vector database):**
     ```bash
     docker run -p 6333:6333 -p 6334:6334 \
         -v $(pwd)/qdrant_storage:/qdrant/storage:z \
@@ -43,7 +43,7 @@ You will need **Ollama** and **Qdrant** running. The easiest way to get started 
 
 ## API Usage
 
-### Generate Optimized Tags
+### Generate Tags
 
 This is the main endpoint for transforming a prompt into a validated tag set.
 
@@ -73,11 +73,12 @@ This is the main endpoint for transforming a prompt into a validated tag set.
 
 ---
 
-## Future Roadmap
+## Roadmap
 
 Some of the planned improvements:
 
+-   **[ ] Update tags list:** Add more tags to the database to improve tagging accuracy.
+-   **[ ] Allow external API processing:** Allow using OpenAI models for faster embedding processing and use GPT models.
 -   **[ ] Automatic Negative Prompts:** Automatically generate tags for things to *avoid* in the image (e.g., `bad_anatomy`, `blurry`).
 -   **[ ] Tag Weighting:** Allow the system to identify the most critical tags and automatically add emphasis to them (e.g., `(1girl:1.2)`).
--   **[ ] Caching:** Implement a caching system to provide instant results for frequently used prompts.
 -   **[ ] Batch Processing:** Add an endpoint to process multiple prompts in a single request.
