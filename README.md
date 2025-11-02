@@ -1,6 +1,6 @@
 # WIP 🚧
 
-Translates natural language prompts into optimized, structured tags for image generation. Uses LLM for semantic extraction and a vector database for tag canonicalization via semantic search.
+Translates natural language prompts into optimized, structured tags for image generation. Uses LLM for candidate extraction and a vector database for tag canonicalization via semantic search.
 
 For example, it turns this:
 > "A beautiful portrait of a redhead warrior girl with piercing blue eyes, standing in a dark, enchanted forest at sunset."
