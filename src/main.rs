@@ -6,8 +6,10 @@ use axum::{
     response::IntoResponse,
     routing::{get, post},
 };
+use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
 
+mod config;
 mod csv;
 mod embedding;
 mod error;
@@ -16,7 +18,7 @@ mod llm;
 use csv::read_tags_from_csv;
 use embedding::Embedding;
 
-use crate::{error::AppError, llm::Llm};
+use crate::{config::Config, error::AppError, llm::Llm};
 
 #[derive(Deserialize)]
 pub struct PromptInput {
@@ -29,17 +31,6 @@ pub struct TagOutput {
     pub score: f32,
 }
 
-// Qdrant
-const QDRANT_URL: &str = "http://localhost:6334";
-const COLLECTION_NAME: &str = "image-tags";
-// Ollama
-const OLLAMA_HOST: &str = "http://localhost";
-const OLLAMA_PORT: u16 = 11434;
-
-// embeddinggemma has a dimension of 768.
-const VECTOR_SIZE: u64 = 768;
-const EMBEDDING_MODEL: &str = "embeddinggemma";
-
 #[derive(Clone)]
 struct AppState {
     embedding: Embedding,
@@ -48,11 +39,19 @@ struct AppState {
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
+    dotenv().ok();
+    let config = Config::from_env();
     tracing_subscriber::fmt::init();
 
-    let llm = Llm::new(OLLAMA_HOST, OLLAMA_PORT, "gemma3:4b")?;
-    let embedding =
-        Embedding::new(QDRANT_URL, VECTOR_SIZE, EMBEDDING_MODEL, COLLECTION_NAME).await?;
+    let llm = Llm::new(config.ollama_host, config.ollama_port, config.llm_model)?;
+    let embedding = Embedding::new(
+        config.qdrant_url,
+        config.vector_size,
+        config.embedding_model,
+        config.collection_name,
+        config.embedding_concurrency,
+    )
+    .await?;
     let app_state = AppState { embedding, llm };
 
     let app = Router::new()
@@ -64,7 +63,7 @@ async fn main() -> Result<(), AppError> {
         .route("/structured-tags", post(test_generate_structured_tags))
         .with_state(Arc::new(app_state));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3333").await?;
+    let listener = tokio::net::TcpListener::bind(config.server_addr).await?;
     axum::serve(listener, app).await?;
 
     Ok(())

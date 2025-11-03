@@ -82,8 +82,12 @@ pub struct Llm {
 }
 
 impl Llm {
-    pub fn new(host: &str, port: u16, model: impl Into<String>) -> Result<Self, LlmError> {
-        let ollama = Ollama::new(host, port);
+    pub fn new(
+        host: impl Into<String>,
+        port: u16,
+        model: impl Into<String>,
+    ) -> Result<Self, LlmError> {
+        let ollama = Ollama::new(host.into(), port);
 
         Ok(Self {
             llm: ollama,
@@ -100,11 +104,10 @@ impl Llm {
     }
 
     pub async fn generate_candidate_tags(&self, prompt: &str) -> Result<Vec<String>, LlmError> {
-        let system_prompt = TAGGER_SYSTEM_PROMPT;
-
         let full_prompt = format!("USER PROMPT: \"{}\"", prompt);
 
-        let request = GenerationRequest::new(self.model.clone(), full_prompt).system(system_prompt);
+        let request =
+            GenerationRequest::new(self.model.clone(), full_prompt).system(TAGGER_SYSTEM_PROMPT);
 
         let response = self.llm.generate(request).await?;
 

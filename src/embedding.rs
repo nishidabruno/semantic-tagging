@@ -22,19 +22,21 @@ pub struct Embedding {
     db: Qdrant,
     collection_name: String,
     embedding_model: String,
+    embedding_concurrency: usize,
 }
 
 impl Embedding {
     pub async fn new(
-        url: &str,
+        url: impl Into<String>,
         size: u64,
         embedding_model: impl Into<String>,
         collection_name: impl Into<String>,
+        embedding_concurrency: usize,
     ) -> Result<Self, EmbeddingError> {
         let collection_name = collection_name.into();
         let embedding_model = embedding_model.into();
 
-        let db = qdrant_client::Qdrant::from_url(url).build()?;
+        let db = qdrant_client::Qdrant::from_url(&url.into()).build()?;
 
         let create_response = db
             .create_collection(
@@ -50,10 +52,7 @@ impl Embedding {
 
             // 6 = Already Exits
             Err(QdrantError::ResponseError { status }) if status.code() == 6.into() => {
-                println!(
-                    "Collection '{}' already exists. Initializing.",
-                    collection_name
-                );
+                println!("Using collection '{}'", collection_name);
             }
 
             Err(e) => {
@@ -65,6 +64,7 @@ impl Embedding {
             db,
             collection_name,
             embedding_model,
+            embedding_concurrency,
         })
     }
 
@@ -109,12 +109,12 @@ impl Embedding {
                     payload_data,
                 ))
             })
-            .buffer_unordered(6);
+            .buffer_unordered(self.embedding_concurrency);
 
         let points: Vec<PointStruct> = point_futures.try_collect().await?;
 
         println!(
-            "Generated {} embeddings. Upserting to Qdrant...",
+            "Generated {} embeddings. Upserting to database...",
             points.len()
         );
 
@@ -201,12 +201,12 @@ impl Embedding {
                 }
 
                 println!(
-                    "    - Candidate '{}' did not find a confident match in Qdrant.",
+                    "    - Candidate '{}' did not find a confident match in the vector database.",
                     tag_name
                 );
                 Ok(None)
             })
-            .buffer_unordered(6);
+            .buffer_unordered(self.embedding_concurrency);
 
         let final_tags: HashSet<String> = validated_tags_stream
             .filter_map(
