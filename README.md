@@ -19,22 +19,22 @@ Into this:
 
 The service provides a simple API with three-step pipeline:
 
-1.  **Generation:** First, it analyzes the user's prompt to generate a broad list of "candidate" tags, sorting them into categories like the main subject, the background, and the overall style.
+1.  **Generation:** First, it analyzes the user's prompt to generate a list of "candidate" tags, sorting them into categories like the main subject, the background, and the overall style.
 2.  **Validation:** Next, it takes each candidate tag and searches on the vector database to find the closest semantic match. This is where "pink hair" becomes the more standard `pink_hair`.
-3.  **Finalization:** Finally, de-duplicated list of the best tags, correctly prioritized, and returns it to the user.
+3.  **Finalization:** Finally, de-duplicated list of the best tags, correctly prioritized, is returned to the user.
 
 ## Getting Started
 
 ### Prerequisites
 
-You will need **Ollama** and **Qdrant** running. The easiest way to get started is with Docker.
+To run it locally ou will need **Ollama** and **Qdrant**.
 
 1.  **Install Ollama:** Follow the official instructions at [ollama.com](https://ollama.com/). Then, download the necessary AI models:
     ```bash
     ollama pull gemma3:4b
     ollama pull embeddinggemma
     ```
-2.  **Run Qdrant (vector database):**
+2.  **Run Qdrant (vector database):** The easiest way to get started is with Docker.
     ```bash
     docker run -p 6333:6333 -p 6334:6334 \
         -v $(pwd)/qdrant_storage:/qdrant/storage:z \
@@ -77,7 +77,7 @@ This is the main endpoint for transforming a prompt into a validated tag set.
 
 Some of the planned improvements:
 
--   **[ ] Update tags list:** Add more tags to the database to improve tagging accuracy.
+-   **[ ] Update tags list:** Add more tags to the database to improve tagging accuracy (currently dataset is ~10k).
 -   **[ ] Allow external API processing:** Allow using OpenAI models for faster embedding processing and use GPT models.
 -   **[ ] Automatic Negative Prompts:** Automatically generate tags for things to *avoid* in the image (e.g., `bad_anatomy`, `blurry`).
 -   **[ ] Tag Weighting:** Allow the system to identify the most critical tags and automatically add emphasis to them (e.g., `(1girl:1.2)`).
