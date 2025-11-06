@@ -36,10 +36,10 @@ pub enum EmbeddingError {
 #[derive(Debug, Error)]
 pub enum AppError {
     #[error("LLM interaction failed: {0}")]
-    Llm(#[from] LlmError),
+    Llm(#[from] Box<LlmError>),
 
     #[error("Embedding or vector DB operation failed: {0}")]
-    Embedding(#[from] EmbeddingError),
+    Embedding(#[from] Box<EmbeddingError>),
 
     // #[error("Failed to read CSV file: {0}")]
     // Csv(#[from] CsvError),
@@ -73,5 +73,17 @@ impl IntoResponse for AppError {
         let body = Json(json!({ "error": error_message }));
 
         (status, body).into_response()
+    }
+}
+
+impl From<LlmError> for AppError {
+    fn from(err: LlmError) -> Self {
+        AppError::Llm(Box::new(err))
+    }
+}
+
+impl From<EmbeddingError> for AppError {
+    fn from(err: EmbeddingError) -> Self {
+        AppError::Embedding(Box::new(err))
     }
 }
