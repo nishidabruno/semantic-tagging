@@ -27,14 +27,14 @@ The service provides a simple API with three-step pipeline:
 
 ### Prerequisites
 
-To run it locally ou will need **Ollama** and **Qdrant**.
+To run it locally you will need **Ollama** and **Qdrant**.
 
-1.  **Install Ollama:** Follow the official instructions at [ollama.com](https://ollama.com/). Then, download the necessary AI models:
+1.  **Install Ollama:** Follow the official instructions at [ollama.com](https://ollama.com/). Then, download the necessary models:
     ```bash
     ollama pull gemma3:4b
     ollama pull embeddinggemma
     ```
-2.  **Run Qdrant (vector database):** The easiest way to get started is with Docker.
+2.  **Run Qdrant (vector database):** The easiest way to get started is with Docker:
     ```bash
     docker run -p 6333:6333 -p 6334:6334 \
         -v $(pwd)/qdrant_storage:/qdrant/storage:z \
