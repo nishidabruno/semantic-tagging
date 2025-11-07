@@ -17,6 +17,8 @@ use crate::error::EmbeddingError;
 use crate::error::LlmError;
 use crate::{TagOutput, csv::TagRow, llm::Llm};
 
+const COLLECTION_EXISTS_CODE: i32 = 6;
+
 #[derive(Clone)]
 pub struct Embedding {
     db: Qdrant,
@@ -50,8 +52,9 @@ impl Embedding {
                 println!("Collection '{}' created successfully.", collection_name);
             }
 
-            // 6 = Already Exits
-            Err(QdrantError::ResponseError { status }) if status.code() == 6.into() => {
+            Err(QdrantError::ResponseError { status })
+                if status.code() == COLLECTION_EXISTS_CODE.into() =>
+            {
                 println!("Using collection '{}'", collection_name);
             }
 
@@ -70,7 +73,7 @@ impl Embedding {
 
     async fn generate_single_embedding(
         &self,
-        text: String,
+        text: &str,
         llm: &Llm,
     ) -> Result<Vec<f32>, EmbeddingError> {
         let request = GenerateEmbeddingsRequest::new(self.embedding_model.clone(), text.into());
@@ -94,19 +97,15 @@ impl Embedding {
 
         let point_futures = stream::iter(rows)
             .map(|record| async move {
-                let embedding_vector = self
-                    .generate_single_embedding(record.name.clone(), llm)
-                    .await?;
-
-                let payload_data = [
-                    ("name", record.name.into()),
-                    ("category", (record.category as i64).into()),
-                ];
+                let embedding_vector = self.generate_single_embedding(&record.name, llm).await?;
 
                 Ok::<PointStruct, EmbeddingError>(PointStruct::new(
                     record.tag_id,
                     embedding_vector,
-                    payload_data,
+                    [
+                        ("name", record.name.as_str().into()),
+                        ("category", (record.category as i64).into()),
+                    ],
                 ))
             })
             .buffer_unordered(self.embedding_concurrency);
@@ -126,12 +125,8 @@ impl Embedding {
         Ok(())
     }
 
-    pub async fn search(
-        &self,
-        prompt: String,
-        llm: &Llm,
-    ) -> Result<Vec<TagOutput>, EmbeddingError> {
-        let prompt_embedding = self.generate_single_embedding(prompt, llm).await?;
+    pub async fn search(&self, prompt: &str, llm: &Llm) -> Result<Vec<TagOutput>, EmbeddingError> {
+        let prompt_embedding = self.generate_single_embedding(&prompt, llm).await?;
 
         let search_request = SearchPoints {
             collection_name: self.collection_name.clone(),
@@ -174,9 +169,7 @@ impl Embedding {
     ) -> Result<HashSet<String>, EmbeddingError> {
         let validated_tags_stream = stream::iter(candidate_tags)
             .map(|tag_name| async move {
-                let embedding_vector = self
-                    .generate_single_embedding(tag_name.clone(), llm)
-                    .await?;
+                let embedding_vector = self.generate_single_embedding(&tag_name, llm).await?;
 
                 let search_request = SearchPoints {
                     collection_name: self.collection_name.clone(),
@@ -210,7 +203,7 @@ impl Embedding {
 
         let final_tags: HashSet<String> = validated_tags_stream
             .filter_map(
-                |res: Result<Option<String>, anyhow::Error>| async move { res.ok().flatten() },
+                |res: Result<Option<String>, EmbeddingError>| async move { res.ok().flatten() },
             )
             .collect()
             .await;

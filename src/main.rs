@@ -88,7 +88,7 @@ async fn prompt_to_tags(
     State(state): State<Arc<AppState>>,
     Json(input): Json<PromptInput>,
 ) -> Result<impl IntoResponse, AppError> {
-    let result = state.embedding.search(input.prompt, &state.llm).await?;
+    let result = state.embedding.search(&input.prompt, &state.llm).await?;
 
     Ok(Json(result))
 }
