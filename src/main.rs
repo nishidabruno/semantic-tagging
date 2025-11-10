@@ -57,10 +57,7 @@ async fn main() -> Result<(), AppError> {
     let app = Router::new()
         .route("/health", get(check_health))
         .route("/tags", post(embed_tags_from_csv))
-        .route("/get-tags", post(prompt_to_tags))
-        .route("/generate-candidate-tags", post(generate_candidate_tags))
         .route("/generate-tags", post(generate_tags))
-        .route("/structured-tags", post(test_generate_structured_tags))
         .with_state(Arc::new(app_state));
 
     let listener = tokio::net::TcpListener::bind(config.server_addr).await?;
@@ -70,36 +67,17 @@ async fn main() -> Result<(), AppError> {
 }
 
 async fn check_health() -> &'static str {
-    "bip bip"
+    "beep boop"
 }
 
 async fn embed_tags_from_csv(
     State(state): State<Arc<AppState>>,
-    // Json(input): Json<PromptInput>,
 ) -> Result<impl IntoResponse, AppError> {
     let tags = read_tags_from_csv("./selected_tags.csv");
 
     state.embedding.upsert_batch(tags, &state.llm).await?;
 
     Ok(())
-}
-
-async fn prompt_to_tags(
-    State(state): State<Arc<AppState>>,
-    Json(input): Json<PromptInput>,
-) -> Result<impl IntoResponse, AppError> {
-    let result = state.embedding.search(&input.prompt, &state.llm).await?;
-
-    Ok(Json(result))
-}
-
-async fn generate_candidate_tags(
-    State(state): State<Arc<AppState>>,
-    Json(input): Json<PromptInput>,
-) -> Result<impl IntoResponse, AppError> {
-    let result = state.llm.generate_candidate_tags(&input.prompt).await?;
-
-    Ok(Json(result))
 }
 
 async fn generate_tags(
@@ -115,13 +93,4 @@ async fn generate_tags(
         .await?;
 
     Ok(Json(tags))
-}
-
-async fn test_generate_structured_tags(
-    State(state): State<Arc<AppState>>,
-    Json(input): Json<PromptInput>,
-) -> Result<impl IntoResponse, AppError> {
-    let structured_tags = state.llm.generate_structured_tags(&input.prompt).await?;
-
-    Ok(Json(structured_tags))
 }
