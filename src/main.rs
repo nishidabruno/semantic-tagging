@@ -23,6 +23,8 @@ use crate::{config::Config, error::AppError, llm::Llm};
 #[derive(Deserialize)]
 pub struct PromptInput {
     prompt: String,
+    include_positive: Option<bool>,
+    include_negative: Option<bool>,
 }
 
 #[derive(Debug, Serialize)]
@@ -31,11 +33,37 @@ pub struct TagOutput {
     pub score: f32,
 }
 
+#[derive(Serialize)]
+pub struct GenerateTagsResponse {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    positive: Option<&'static [&'static str]>,
+    tags: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    negative: Option<&'static [&'static str]>,
+}
+
 #[derive(Clone)]
 struct AppState {
     embedding: Embedding,
     llm: Llm,
 }
+
+const POSITIVE_TAGS: &[&str] = &[
+    "masterpiece",
+    "best quality",
+    "very aesthetic",
+    "absurdres",
+    "amazing quality",
+];
+
+const NEGATIVE_TAGS: &[&str] = &[
+    "bad quality",
+    "worst quality",
+    "worst detail",
+    "bad hands",
+    "bad anatomy",
+    "extra fingers",
+];
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
@@ -92,5 +120,16 @@ async fn generate_tags(
         .validate_tags_concurrently(flat_tag_vec, &state.llm)
         .await?;
 
-    Ok(Json(tags))
+    let positive = input
+        .include_positive
+        .and_then(|v| v.then_some(POSITIVE_TAGS));
+    let negative = input
+        .include_negative
+        .and_then(|v| v.then_some(NEGATIVE_TAGS));
+
+    Ok(Json(GenerateTagsResponse {
+        positive,
+        tags,
+        negative,
+    }))
 }
