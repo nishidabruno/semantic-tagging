@@ -1,3 +1,4 @@
+use core::{Config, Embedding, Llm, error::AppError};
 use std::sync::Arc;
 
 use axum::{
@@ -9,28 +10,11 @@ use axum::{
 use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
 
-mod config;
-mod csv;
-mod embedding;
-mod error;
-mod llm;
-
-use csv::read_tags_from_csv;
-use embedding::Embedding;
-
-use crate::{config::Config, error::AppError, llm::Llm};
-
 #[derive(Deserialize)]
 pub struct PromptInput {
     prompt: String,
     include_positive: Option<bool>,
     include_negative: Option<bool>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct TagOutput {
-    pub name: String,
-    pub score: f32,
 }
 
 #[derive(Serialize)]
@@ -84,7 +68,6 @@ async fn main() -> Result<(), AppError> {
 
     let app = Router::new()
         .route("/health", get(check_health))
-        .route("/tags", post(embed_tags_from_csv))
         .route("/generate-tags", post(generate_tags))
         .with_state(Arc::new(app_state));
 
@@ -96,16 +79,6 @@ async fn main() -> Result<(), AppError> {
 
 async fn check_health() -> &'static str {
     "beep boop"
-}
-
-async fn embed_tags_from_csv(
-    State(state): State<Arc<AppState>>,
-) -> Result<impl IntoResponse, AppError> {
-    let tags = read_tags_from_csv("./selected_tags.csv");
-
-    state.embedding.upsert_batch(tags, &state.llm).await?;
-
-    Ok(())
 }
 
 async fn generate_tags(

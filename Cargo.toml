@@ -1,9 +1,8 @@
-[package]
-name = "semantic-tags"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+resolver = "3"
+members = ["crates/core", "crates/cli", "crates/api"]
 
-[dependencies]
+[workspace.dependencies]
 anyhow = "1.0.100"
 axum = "0.8.6"
 csv = "1.4.0"

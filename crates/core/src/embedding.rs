@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use futures::StreamExt;
 use futures::TryStreamExt;
 use futures::stream;
@@ -15,7 +13,12 @@ use qdrant_client::{
 
 use crate::error::EmbeddingError;
 use crate::error::LlmError;
-use crate::{TagOutput, csv::TagRow, llm::Llm};
+use crate::{csv::TagRow, llm::Llm};
+
+pub struct TagOutput {
+    pub name: String,
+    pub score: f32,
+}
 
 const COLLECTION_EXISTS_CODE: i32 = 6;
 
@@ -126,7 +129,7 @@ impl Embedding {
     }
 
     pub async fn search(&self, prompt: &str, llm: &Llm) -> Result<Vec<TagOutput>, EmbeddingError> {
-        let prompt_embedding = self.generate_single_embedding(&prompt, llm).await?;
+        let prompt_embedding = self.generate_single_embedding(prompt, llm).await?;
 
         let search_request = SearchPoints {
             collection_name: self.collection_name.clone(),
@@ -166,7 +169,7 @@ impl Embedding {
         &self,
         candidate_tags: Vec<String>,
         llm: &Llm,
-    ) -> Result<HashSet<String>, EmbeddingError> {
+    ) -> Result<Vec<String>, EmbeddingError> {
         let validated_tags_stream = stream::iter(candidate_tags)
             .map(|tag_name| async move {
                 let embedding_vector = self.generate_single_embedding(&tag_name, llm).await?;
@@ -199,9 +202,10 @@ impl Embedding {
                 );
                 Ok(None)
             })
+            // TODO: Fix ordering: subject -> environment -> quality
             .buffer_unordered(self.embedding_concurrency);
 
-        let final_tags: HashSet<String> = validated_tags_stream
+        let final_tags: Vec<String> = validated_tags_stream
             .filter_map(
                 |res: Result<Option<String>, EmbeddingError>| async move { res.ok().flatten() },
             )
