@@ -13,7 +13,7 @@ use qdrant_client::{
 
 use crate::error::EmbeddingError;
 use crate::error::LlmError;
-use crate::{csv::TagRow, llm::Llm};
+use crate::{csv::Tag, llm::Llm};
 
 pub struct TagOutput {
     pub name: String,
@@ -95,7 +95,7 @@ impl Embedding {
         Ok(embedding)
     }
 
-    pub async fn upsert_batch(&self, rows: Vec<TagRow>, llm: &Llm) -> Result<(), EmbeddingError> {
+    pub async fn upsert_batch(&self, rows: Vec<Tag>, llm: &Llm) -> Result<(), EmbeddingError> {
         println!("Embedding {} rows concurrently...", rows.len());
 
         let point_futures = stream::iter(rows)
