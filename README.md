@@ -1,13 +1,14 @@
 # WIP 🚧
 
-Translates natural language prompts into optimized, structured tags for image generation. Uses LLM for candidate extraction and a vector database for tag canonicalization via semantic search.
+Translates natural language prompts into optimized, structured tags for image generation. Uses LLM for candidate extraction and a vector database for semantic search.
 
 For example, it turns this:
-> "A beautiful portrait of a redhead warrior girl with piercing blue eyes, standing in a dark, enchanted forest at sunset."
+> "Close-up colorful songbirds on branch, eagle soaring above, soft sunrise light, misty forest background, cinematic focus, ultra-realistic detail."
 
 Into this:
-> `1girl, red_hair, warrior, blue_eyes, portrait, enchanted_forest, dark, sunset, cinematic_lighting, highly_detailed, masterpiece`
-<img width="1744" height="972" alt="example-tag" src="https://github.com/user-attachments/assets/ad49e92b-2011-43ed-a7ab-18f23222aa8b" />
+
+> `multiple_songbird, animal_focus, close-up, branch, tree_branch, forest, mist, sunrise, sky, flying, soaring, wildlife, nature, depth_of_field, cinematic_lighting, realistic, ultra_detailed`
+<img width="1744" height="972" alt="Frame 22" src="https://github.com/user-attachments/assets/ed603ffa-41a6-4a0a-83e4-e382ff1fd2f2" />
 
 ## Core Features
 
